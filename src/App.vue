@@ -1,38 +1,42 @@
 <template>
     <div id="app">
-        <img alt="Vue logo" src="./assets/logo.png" />
-        <pendo-button :label="label" @click="onClick" />
+        <img
+            alt="Vue logo"
+            src="./assets/logo.png" />
+        <pendo-button
+            :label="label"
+            @click="onClick" />
         <HelloWorld msg="Welcome to Your Vue.js App" />
     </div>
 </template>
 
 <script>
-import HelloWorld from "./components/HelloWorld.vue";
-import { PendoButton } from "@pendo/components";
-import { mapMutations, mapState } from "vuex";
+import HelloWorld from './components/HelloWorld.vue';
+import { PendoButton } from '@pendo/components';
+import { mapMutations, mapState } from 'vuex';
 
 export default {
-    name: "App",
+    name: 'App',
     components: {
         HelloWorld,
-        PendoButton,
+        PendoButton
     },
     computed: {
         ...mapState({
-            count: (state) => state.count,
+            count: (state) => state.count
         }),
         label() {
             return `Count: ${this.count}`;
-        },
+        }
     },
     methods: {
         ...mapMutations({
-            increment: "increment",
+            increment: 'increment'
         }),
         onClick() {
             this.increment();
-        },
-    },
+        }
+    }
 };
 </script>
 
