@@ -1,0 +1,18 @@
+{
+  "name": "fickle-and-shallow",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Examples of unorthodox enterprise-level Vuex practices.",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "vue",
+    "vuex"
+  ],
+  "author": "Neill Robson",
+  "license": "ISC",
+  "dependencies": {
+    "vue": "^2.7.16"
+  }
+}
