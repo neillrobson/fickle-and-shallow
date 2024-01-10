@@ -1,5 +1,38 @@
 const aCode = 97;
 
+function base26divmod(i) {
+    const mod = i % 26;
+    const div = (i - mod) / 26;
+
+    if (mod === 0) {
+        return [div - 1, mod + 26];
+    }
+
+    return [div, mod];
+}
+
+/**
+ * Converts numeric indexes into Excel-style alphabetic IDs.
+ *
+ * A "zero" digit doesn't exist in the alphabet, so the output of this function isn't true "base 26."
+ * Think of the output more like column labels in Excel.
+ *
+ * @param {Number} i Zero-based index to convert
+ * @returns Base-26 alphabetic ID
+ */
+export function indexToAlphabeticID(i) {
+    ++i; // Start at index 1
+    const chars = [];
+
+    while (i > 0) {
+        const [div, mod] = base26divmod(i);
+        chars.unshift(String.fromCharCode(aCode - 1 + mod));
+        i = div;
+    }
+
+    return chars.join('');
+}
+
 function alphaIncrement(str) {
     let carry = true;
 

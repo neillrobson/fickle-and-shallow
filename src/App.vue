@@ -1,37 +1,66 @@
 <template>
     <div id="app">
-        <img
-            alt="Vue logo"
-            src="./assets/logo.png" />
+        <pendo-input-number
+            label="Convert to Alphabetic"
+            :value="convertValue"
+            @change="convertValue = $event" />
+        <span>{{ conversion }}</span>
+        <pendo-input
+            label="Look up numeric"
+            :value="lookupValue"
+            @change="lookupValue = $event" />
+        <span>{{ lookup }}</span>
+        <hr />
         <pendo-button
             :label="label"
             @click="onClick" />
-        <HelloWorld msg="Welcome to Your Vue.js App" />
+        <pendo-button
+            label="Hydrate Vuex"
+            @click="hydrate" />
     </div>
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld.vue';
-import { PendoButton } from '@pendo/components';
-import { mapMutations, mapState } from 'vuex';
+import { PendoButton, PendoInput, PendoInputNumber } from '@pendo/components';
+import { mapActions, mapGetters, mapMutations, mapState } from 'vuex';
+import { indexToAlphabeticID } from './utils/generate';
 
 export default {
     name: 'App',
     components: {
-        HelloWorld,
-        PendoButton
+        PendoButton,
+        PendoInput,
+        PendoInputNumber
+    },
+    data() {
+        return {
+            convertValue: 0,
+            lookupValue: ''
+        };
     },
     computed: {
         ...mapState({
             count: (state) => state.count
         }),
+        ...mapGetters({
+            mapAtKey: 'mapAtKey'
+        }),
         label() {
             return `Count: ${this.count}`;
+        },
+        conversion() {
+            return indexToAlphabeticID(this.convertValue);
+        },
+        lookup() {
+            return this.mapAtKey(this.lookupValue);
         }
     },
     methods: {
         ...mapMutations({
             increment: 'increment'
+        }),
+        ...mapActions({
+            hydrate: 'hydrate'
         }),
         onClick() {
             this.increment();
