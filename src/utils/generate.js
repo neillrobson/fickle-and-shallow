@@ -8,7 +8,7 @@ function alphaIncrement(str) {
         code -= aCode;
         code = (code + (carry ? 1 : 0)) % 26;
         code += aCode;
-        carry = code === aCode;
+        carry = carry && code === aCode;
         acc.unshift(String.fromCharCode(code));
 
         return acc;
@@ -39,11 +39,13 @@ function* alphabetKeys() {
  * @param {Number} count Number of keys to generate
  * @param {Function} filler Function used to generate values
  */
-export function alphabetMap(count = 1e6, filler = (i) => ({ i })) {
+export function alphabetMap(count = 1e4, filler = (i) => ({ i })) {
     const ret = {};
     const itr = alphabetKeys();
 
     for (let i = 0; i < count; i++) {
         ret[itr.next().value] = filler(i);
     }
+
+    return ret;
 }
