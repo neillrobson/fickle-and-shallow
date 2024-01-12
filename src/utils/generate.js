@@ -1,3 +1,5 @@
+export const DEFAULT_MAP_SIZE = 1e4;
+
 const aCode = 97;
 
 function base26divmod(i) {
@@ -72,7 +74,7 @@ function* alphabetKeys() {
  * @param {Number} count Number of keys to generate
  * @param {Function} filler Function used to generate values
  */
-export function alphabetMap(count = 1e4, filler = (i) => ({ i })) {
+export function alphabetMap(count = DEFAULT_MAP_SIZE, filler = (i) => ({ i })) {
     const ret = {};
     const itr = alphabetKeys();
 

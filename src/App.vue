@@ -17,13 +17,20 @@
         <pendo-button
             label="Hydrate Vuex"
             @click="hydrate" />
+        <hr />
+        <pendo-button
+            label="Looped Dispatch"
+            :loading="loopedDispatchLoading"
+            @click="loopedDispatch" />
     </div>
 </template>
 
 <script>
 import { PendoButton, PendoInput, PendoInputNumber } from '@pendo/components';
+import { watch } from 'vue';
 import { mapActions, mapGetters, mapMutations, mapState } from 'vuex';
-import { indexToAlphabeticID } from './utils/generate';
+import { useStore } from './utils/vuex';
+import { DEFAULT_MAP_SIZE, indexToAlphabeticID } from './utils/generate';
 
 export default {
     name: 'App',
@@ -32,14 +39,41 @@ export default {
         PendoInput,
         PendoInputNumber
     },
+    setup() {
+        const store = useStore();
+
+        watch(
+            () => store.state.map,
+            () => {
+                console.log('Shallow watcher');
+            }
+        );
+
+        watch(
+            () => store.state.map,
+            () => {
+                console.log('Deep watcher');
+            },
+            { deep: true }
+        );
+
+        watch(
+            () => store.state.map.abc?.i,
+            (i) => {
+                console.log(`Watching abc.i: ${i}`);
+            }
+        );
+    },
     data() {
         return {
             convertValue: 0,
-            lookupValue: ''
+            lookupValue: '',
+            loopedDispatchLoading: false
         };
     },
     computed: {
         ...mapState({
+            map: (state) => state.map,
             count: (state) => state.count
         }),
         ...mapGetters({
@@ -60,10 +94,25 @@ export default {
             increment: 'increment'
         }),
         ...mapActions({
-            hydrate: 'hydrate'
+            hydrate: 'hydrate',
+            collatzAtKey: 'collatzAtKey'
         }),
         onClick() {
             this.increment();
+        },
+        async loopedDispatch() {
+            this.loopedDispatchLoading = true;
+
+            const keys = Array.from({ length: 19 }, () => Math.floor(Math.random() * DEFAULT_MAP_SIZE)).map(
+                indexToAlphabeticID
+            );
+            keys.push('abc'); // We really want this one
+
+            for (const key of keys) {
+                await this.collatzAtKey(key);
+            }
+
+            this.loopedDispatchLoading = false;
         }
     }
 };
