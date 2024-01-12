@@ -30,6 +30,18 @@
 - Does the sequence block all other interactions?
 - Memory consumption differences?
 
+### Watch Counters
+
+- Shallow, on `map`
+- Deep, on `map`
+- Shallow, on `map.abc.i`
+
+## Looped Dispatch
+
+- Fifty (?) iterations, one of which is `abc`
+- collatzAtKey action: rand await timeout
+- collatzAtKey mutation: directly change `i` value
+
 ## Project setup
 
 ```
