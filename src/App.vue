@@ -19,9 +19,13 @@
             @click="hydrate" />
         <hr />
         <pendo-button
-            label="Looped Dispatch"
-            :loading="loopedDispatchLoading"
-            @click="loopedDispatch" />
+            label="External Looped Dispatch"
+            :loading="externalDispatchLoading"
+            @click="externalDispatch" />
+        <pendo-button
+            label="Internal Looped Dispatch"
+            :loading="internalDispatchLoading"
+            @click="internalDispatch" />
     </div>
 </template>
 
@@ -68,7 +72,8 @@ export default {
         return {
             convertValue: 0,
             lookupValue: '',
-            loopedDispatchLoading: false
+            externalDispatchLoading: false,
+            internalDispatchLoading: false
         };
     },
     computed: {
@@ -95,24 +100,35 @@ export default {
         }),
         ...mapActions({
             hydrate: 'hydrate',
-            collatzAtKey: 'collatzAtKey'
+            collatzAtKey: 'collatzAtKey',
+            collatzInternalLoop: 'collatzInternalLoop'
         }),
         onClick() {
             this.increment();
         },
-        async loopedDispatch() {
-            this.loopedDispatchLoading = true;
-
+        getKeys() {
             const keys = Array.from({ length: 49 }, () => Math.floor(Math.random() * DEFAULT_MAP_SIZE)).map(
                 indexToAlphabeticID
             );
             keys.push('abc'); // We really want this one
 
-            for (const key of keys) {
+            return keys;
+        },
+        async externalDispatch() {
+            this.externalDispatchLoading = true;
+
+            for (const key of this.getKeys()) {
                 await this.collatzAtKey(key);
             }
 
-            this.loopedDispatchLoading = false;
+            this.externalDispatchLoading = false;
+        },
+        async internalDispatch() {
+            this.internalDispatchLoading = true;
+
+            await this.collatzInternalLoop(this.getKeys());
+
+            this.internalDispatchLoading = false;
         }
     }
 };

@@ -33,6 +33,11 @@ export default new Store({
             } else {
                 commit('setMapAtKey', { key, value: value * 3 + 1 });
             }
+        },
+        async collatzInternalLoop({ dispatch }, keys) {
+            for (const key of keys) {
+                await dispatch('collatzAtKey', key);
+            }
         }
     },
     getters: {
