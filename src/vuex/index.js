@@ -25,7 +25,7 @@ export default new Store({
         hydrate({ commit }) {
             commit('setMap', alphabetMap());
         },
-        async collatzAtKey({ commit, getters }, key, includeTimeouts) {
+        async collatzAtKey({ commit, getters }, { key, includeTimeouts }) {
             const value = getters.mapAtKey(key).i;
 
             if (includeTimeouts) await sleep(Math.random() * 250);
@@ -36,9 +36,22 @@ export default new Store({
                 commit('setMapAtKey', { key, value: value * 3 + 1 });
             }
         },
-        async collatzInternalLoop({ dispatch }, keys, includeTimeouts) {
+        async collatzInternalLoop({ dispatch }, { keys, includeTimeouts }) {
             for (const key of keys) {
-                await dispatch('collatzAtKey', key, includeTimeouts);
+                await dispatch('collatzAtKey', { key, includeTimeouts });
+            }
+        },
+        async collatzInternalCommit({ commit, getters }, { keys, includeTimeouts }) {
+            for (const key of keys) {
+                const value = getters.mapAtKey(key).i;
+
+                if (includeTimeouts) await sleep(Math.random() * 250);
+
+                if (value % 2 === 0) {
+                    commit('setMapAtKey', { key, value: value / 2 });
+                } else {
+                    commit('setMapAtKey', { key, value: value * 3 + 1 });
+                }
             }
         }
     },

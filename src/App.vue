@@ -31,6 +31,15 @@
             label="Internal Looped Dispatch"
             :loading="internalDispatchLoading"
             @click="internalDispatch" />
+        <hr />
+        <pendo-button
+            label="External Looped Commit"
+            :loading="externalCommitLoading"
+            @click="externalCommit" />
+        <pendo-button
+            label="Internal Looped Commit"
+            :loading="internalCommitLoading"
+            @click="internalCommit" />
     </div>
 </template>
 
@@ -38,8 +47,9 @@
 import { PendoButton, PendoInput, PendoInputNumber, PendoToggle } from '@pendo/components';
 import { watch } from 'vue';
 import { mapActions, mapGetters, mapMutations, mapState } from 'vuex';
-import { useStore } from './utils/vuex';
-import { DEFAULT_MAP_SIZE, indexToAlphabeticID } from './utils/generate';
+import { useStore } from '@/utils/vuex';
+import { sleep } from '@/utils/time';
+import { DEFAULT_MAP_SIZE, indexToAlphabeticID } from '@/utils/generate';
 
 export default {
     name: 'App',
@@ -80,7 +90,9 @@ export default {
             lookupValue: '',
             includeTimeouts: true,
             externalDispatchLoading: false,
-            internalDispatchLoading: false
+            internalDispatchLoading: false,
+            externalCommitLoading: false,
+            internalCommitLoading: false
         };
     },
     computed: {
@@ -103,12 +115,14 @@ export default {
     },
     methods: {
         ...mapMutations({
-            increment: 'increment'
+            increment: 'increment',
+            setMapAtKey: 'setMapAtKey'
         }),
         ...mapActions({
             hydrate: 'hydrate',
             collatzAtKey: 'collatzAtKey',
-            collatzInternalLoop: 'collatzInternalLoop'
+            collatzInternalLoop: 'collatzInternalLoop',
+            collatzInternalCommit: 'collatzInternalCommit'
         }),
         onClick() {
             this.increment();
@@ -125,7 +139,7 @@ export default {
             this.externalDispatchLoading = true;
 
             for (const key of this.getKeys()) {
-                await this.collatzAtKey(key, this.includeTimeouts);
+                await this.collatzAtKey({ key, includeTimeouts: this.includeTimeouts });
             }
 
             this.externalDispatchLoading = false;
@@ -133,9 +147,33 @@ export default {
         async internalDispatch() {
             this.internalDispatchLoading = true;
 
-            await this.collatzInternalLoop(this.getKeys(), this.includeTimeouts);
+            await this.collatzInternalLoop({ keys: this.getKeys(), includeTimeouts: this.includeTimeouts });
 
             this.internalDispatchLoading = false;
+        },
+        async externalCommit() {
+            this.externalCommitLoading = true;
+
+            for (const key of this.getKeys()) {
+                const value = this.mapAtKey(key).i;
+
+                if (this.includeTimeouts) await sleep(Math.random() * 250);
+
+                if (value % 2 === 0) {
+                    this.setMapAtKey({ key, value: value / 2 });
+                } else {
+                    this.setMapAtKey({ key, value: value * 3 + 1 });
+                }
+            }
+
+            this.externalCommitLoading = false;
+        },
+        async internalCommit() {
+            this.internalCommitLoading = true;
+
+            await this.collatzInternalCommit({ keys: this.getKeys(), includeTimeouts: this.includeTimeouts });
+
+            this.internalCommitLoading = false;
         }
     }
 };
