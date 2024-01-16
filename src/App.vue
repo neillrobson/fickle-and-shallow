@@ -103,7 +103,7 @@ export default {
         async loopedDispatch() {
             this.loopedDispatchLoading = true;
 
-            const keys = Array.from({ length: 19 }, () => Math.floor(Math.random() * DEFAULT_MAP_SIZE)).map(
+            const keys = Array.from({ length: 49 }, () => Math.floor(Math.random() * DEFAULT_MAP_SIZE)).map(
                 indexToAlphabeticID
             );
             keys.push('abc'); // We really want this one

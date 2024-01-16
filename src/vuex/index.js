@@ -27,7 +27,7 @@ export default new Store({
         },
         async collatzAtKey({ commit, getters }, key) {
             const value = getters.mapAtKey(key).i;
-            await sleep(Math.random() * 1000);
+            await sleep(Math.random() * 250);
             if (value % 2 === 0) {
                 commit('setMapAtKey', { key, value: value / 2 });
             } else {

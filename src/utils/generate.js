@@ -1,4 +1,4 @@
-export const DEFAULT_MAP_SIZE = 1e4;
+export const DEFAULT_MAP_SIZE = 1e5;
 
 const aCode = 97;
 
