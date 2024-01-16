@@ -17,6 +17,11 @@
         <pendo-button
             label="Hydrate Vuex"
             @click="hydrate" />
+        <pendo-toggle
+            label="Include Timeouts"
+            label-position="left"
+            :value="includeTimeouts"
+            @change="includeTimeouts = $event" />
         <hr />
         <pendo-button
             label="External Looped Dispatch"
@@ -30,7 +35,7 @@
 </template>
 
 <script>
-import { PendoButton, PendoInput, PendoInputNumber } from '@pendo/components';
+import { PendoButton, PendoInput, PendoInputNumber, PendoToggle } from '@pendo/components';
 import { watch } from 'vue';
 import { mapActions, mapGetters, mapMutations, mapState } from 'vuex';
 import { useStore } from './utils/vuex';
@@ -41,7 +46,8 @@ export default {
     components: {
         PendoButton,
         PendoInput,
-        PendoInputNumber
+        PendoInputNumber,
+        PendoToggle
     },
     setup() {
         const store = useStore();
@@ -72,6 +78,7 @@ export default {
         return {
             convertValue: 0,
             lookupValue: '',
+            includeTimeouts: true,
             externalDispatchLoading: false,
             internalDispatchLoading: false
         };
@@ -118,7 +125,7 @@ export default {
             this.externalDispatchLoading = true;
 
             for (const key of this.getKeys()) {
-                await this.collatzAtKey(key);
+                await this.collatzAtKey(key, this.includeTimeouts);
             }
 
             this.externalDispatchLoading = false;
@@ -126,7 +133,7 @@ export default {
         async internalDispatch() {
             this.internalDispatchLoading = true;
 
-            await this.collatzInternalLoop(this.getKeys());
+            await this.collatzInternalLoop(this.getKeys(), this.includeTimeouts);
 
             this.internalDispatchLoading = false;
         }
