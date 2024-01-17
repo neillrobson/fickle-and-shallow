@@ -30,6 +30,15 @@
 - Does the sequence block all other interactions?
 - Memory consumption differences?
 
+- Number of reactive updates
+- Rendering degradation
+  - Loading spinner
+  - Reactive update delays
+- Memory consumption
+  - Max heap size
+  - Garbage collection frequency
+- Runtime *minus the awaits*
+
 ### Watch Counters
 
 - Shallow, on `map`

@@ -40,15 +40,18 @@
             label="Internal Looped Commit"
             :loading="internalCommitLoading"
             @click="internalCommit" />
+        <hr />
+        <p>Time spent on last run: {{ lastRunTimeMs }}ms</p>
+        <p>Idle time: {{ idleTimeMs }}ms</p>
     </div>
 </template>
 
 <script>
 import { PendoButton, PendoInput, PendoInputNumber, PendoToggle } from '@pendo/components';
-import { watch } from 'vue';
+import { ref, watch } from 'vue';
 import { mapActions, mapGetters, mapMutations, mapState } from 'vuex';
 import { useStore } from '@/utils/vuex';
-import { sleep } from '@/utils/time';
+import { sleep, resetIdleMs, idleMs } from '@/utils/time';
 import { DEFAULT_MAP_SIZE, indexToAlphabeticID } from '@/utils/generate';
 
 export default {
@@ -61,6 +64,13 @@ export default {
     },
     setup() {
         const store = useStore();
+
+        const externalDispatchLoading = ref(false);
+        const internalDispatchLoading = ref(false);
+        const externalCommitLoading = ref(false);
+        const internalCommitLoading = ref(false);
+        const lastRunTimeMs = ref(0);
+        const idleTimeMs = ref(0);
 
         watch(
             () => store.state.map,
@@ -83,16 +93,39 @@ export default {
                 console.log(`Watching abc.i: ${i}`);
             }
         );
+
+        let start = 0;
+        const loadingWatcher = (loading) => {
+            if (loading) {
+                start = performance.now();
+            } else {
+                const end = performance.now();
+                const grossTime = end - start;
+                idleTimeMs.value = Math.round(idleMs);
+                lastRunTimeMs.value = Math.round(grossTime - idleMs);
+                resetIdleMs();
+            }
+        };
+
+        watch(externalDispatchLoading, loadingWatcher);
+        watch(internalDispatchLoading, loadingWatcher);
+        watch(externalCommitLoading, loadingWatcher);
+        watch(internalCommitLoading, loadingWatcher);
+
+        return {
+            externalDispatchLoading,
+            internalDispatchLoading,
+            externalCommitLoading,
+            internalCommitLoading,
+            lastRunTimeMs,
+            idleTimeMs
+        };
     },
     data() {
         return {
             convertValue: 0,
             lookupValue: '',
-            includeTimeouts: true,
-            externalDispatchLoading: false,
-            internalDispatchLoading: false,
-            externalCommitLoading: false,
-            internalCommitLoading: false
+            includeTimeouts: true
         };
     },
     computed: {
