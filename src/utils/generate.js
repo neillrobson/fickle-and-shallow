@@ -84,3 +84,5 @@ export function alphabetMap(count = DEFAULT_MAP_SIZE, filler = (i) => ({ i })) {
 
     return ret;
 }
+
+export const collatz = (i) => (i % 2 === 0 ? i / 2 : i * 3 + 1);

@@ -13,22 +13,17 @@
             @change="includeTimeouts = $event" />
         <hr />
         <pendo-button
-            label="External Looped Dispatch"
-            :loading="externalDispatchLoading"
-            @click="externalDispatch" />
+            label="Multiple Commits"
+            :loading="multipleCommitsLoading"
+            @click="multipleCommits" />
         <pendo-button
-            label="Internal Looped Dispatch"
-            :loading="internalDispatchLoading"
-            @click="internalDispatch" />
-        <hr />
+            label="Commit with Loop"
+            :loading="commitWithLoopLoading"
+            @click="commitWithLoop" />
         <pendo-button
-            label="External Looped Commit"
-            :loading="externalCommitLoading"
-            @click="externalCommit" />
-        <pendo-button
-            label="Internal Looped Commit"
-            :loading="internalCommitLoading"
-            @click="internalCommit" />
+            label="Commit with Clone"
+            :loading="commitWithCloneLoading"
+            @click="commitWithClone" />
         <hr />
         <p>Time spent on last run: {{ lastRunTimeMs }}ms</p>
         <p>Idle time: {{ idleTimeMs }}ms</p>
@@ -41,7 +36,7 @@ import { ref, watch } from 'vue';
 import { mapActions, mapGetters, mapMutations, mapState } from 'vuex';
 import { useStore } from '@/utils/vuex';
 import { sleep, resetIdleMs, idleMs } from '@/utils/time';
-import { DEFAULT_MAP_SIZE, indexToAlphabeticID } from '@/utils/generate';
+import { DEFAULT_MAP_SIZE, indexToAlphabeticID, collatz } from '@/utils/generate';
 
 const ABA_INDEX = 728;
 
@@ -54,10 +49,9 @@ export default {
     setup() {
         const store = useStore();
 
-        const externalDispatchLoading = ref(false);
-        const internalDispatchLoading = ref(false);
-        const externalCommitLoading = ref(false);
-        const internalCommitLoading = ref(false);
+        const multipleCommitsLoading = ref(false);
+        const commitWithLoopLoading = ref(false);
+        const commitWithCloneLoading = ref(false);
         const lastRunTimeMs = ref(0);
         const idleTimeMs = ref(0);
 
@@ -100,16 +94,14 @@ export default {
             }
         };
 
-        watch(externalDispatchLoading, loadingWatcher);
-        watch(internalDispatchLoading, loadingWatcher);
-        watch(externalCommitLoading, loadingWatcher);
-        watch(internalCommitLoading, loadingWatcher);
+        watch(multipleCommitsLoading, loadingWatcher);
+        watch(commitWithLoopLoading, loadingWatcher);
+        watch(commitWithCloneLoading, loadingWatcher);
 
         return {
-            externalDispatchLoading,
-            internalDispatchLoading,
-            externalCommitLoading,
-            internalCommitLoading,
+            multipleCommitsLoading,
+            commitWithLoopLoading,
+            commitWithCloneLoading,
             lastRunTimeMs,
             idleTimeMs
         };
@@ -134,7 +126,8 @@ export default {
     methods: {
         ...mapMutations({
             increment: 'increment',
-            setMapAtKey: 'setMapAtKey'
+            setMapAtKey: 'setMapAtKey',
+            setMapAtKeys: 'setMapAtKeys'
         }),
         ...mapActions({
             hydrate: 'hydrate',
@@ -160,31 +153,15 @@ export default {
 
             return keys;
         },
-        async externalDispatch() {
-            this.externalDispatchLoading = true;
-
-            for (const key of this.getKeys()) {
-                await this.collatzAtKey({ key, includeTimeouts: this.includeTimeouts });
-            }
-
-            this.externalDispatchLoading = false;
-        },
-        async internalDispatch() {
-            this.internalDispatchLoading = true;
-
-            await this.collatzInternalLoop({ keys: this.getKeys(), includeTimeouts: this.includeTimeouts });
-
-            this.internalDispatchLoading = false;
-        },
-        async externalCommit() {
-            this.externalCommitLoading = true;
+        async multipleCommits() {
+            this.multipleCommitsLoading = true;
 
             await sleep(0); // Force a tick for timing purposes
 
             for (const key of this.getKeys()) {
                 const value = this.mapAtKey(key).i;
 
-                if (this.includeTimeouts) await sleep(Math.random() * 250);
+                if (this.includeTimeouts) await sleep(10);
 
                 if (value % 2 === 0) {
                     this.setMapAtKey({ key, value: value / 2 });
@@ -193,14 +170,40 @@ export default {
                 }
             }
 
-            this.externalCommitLoading = false;
+            this.multipleCommitsLoading = false;
         },
-        async internalCommit() {
-            this.internalCommitLoading = true;
+        async commitWithLoop() {
+            this.commitWithLoopLoading = true;
 
-            await this.collatzInternalCommit({ keys: this.getKeys(), includeTimeouts: this.includeTimeouts });
+            const changeMap = {};
 
-            this.internalCommitLoading = false;
+            for (const key of this.getKeys()) {
+                await sleep(this.includeTimeouts ? 10 : 0);
+
+                const value = this.mapAtKey(key).i;
+                changeMap[key] = collatz(value);
+            }
+
+            this.setMapAtKeys({ changeMap });
+
+            this.commitWithLoopLoading = false;
+        },
+        async commitWithClone() {
+            this.commitWithCloneLoading = true;
+
+            // TODO: cloneDeep
+            const changeMap = {};
+
+            for (const key of this.getKeys()) {
+                await sleep(this.includeTimeouts ? 10 : 0);
+
+                const value = this.mapAtKey(key).i;
+                changeMap[key] = collatz(value);
+            }
+
+            this.setMapAtKeys({ changeMap });
+
+            this.commitWithCloneLoading = false;
         }
     }
 };

@@ -8,7 +8,9 @@
             <template #fickle>
                 <fickle />
             </template>
-            <template #shallow> Heya folks it is Neill </template>
+            <template #shallow>
+                <shallow />
+            </template>
         </pendo-tabs>
     </div>
 </template>
@@ -16,16 +18,18 @@
 <script>
 import { PendoTabs } from '@pendo/components';
 import Fickle from '@/components/Fickle.vue';
+import Shallow from '@/components/Shallow.vue';
 
 export default {
     name: 'App',
     components: {
         Fickle,
+        Shallow,
         PendoTabs
     },
     data() {
         return {
-            activeTab: 'fickle',
+            activeTab: 'shallow',
             tabs: [
                 {
                     prop: 'fickle',
