@@ -19,6 +19,11 @@ export default new Store({
         },
         setMapAtKey(state, { key, value }) {
             state.map[key].i = value;
+        },
+        setMapAtKeys(state, { changeMap }) {
+            for (const key in changeMap) {
+                state.map[key].i = changeMap[key];
+            }
         }
     },
     actions: {
