@@ -187,6 +187,8 @@ export default {
         async externalCommit() {
             this.externalCommitLoading = true;
 
+            await sleep(0); // Force a tick for timing purposes
+
             for (const key of this.getKeys()) {
                 const value = this.mapAtKey(key).i;
 

@@ -42,6 +42,8 @@ export default new Store({
             }
         },
         async collatzInternalCommit({ commit, getters }, { keys, includeTimeouts }) {
+            await sleep(0); // Force a tick for timing purposes
+
             for (const key of keys) {
                 const value = getters.mapAtKey(key).i;
 
