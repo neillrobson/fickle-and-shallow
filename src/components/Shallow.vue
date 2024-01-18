@@ -34,6 +34,7 @@
 import { PendoButton, PendoToggle } from '@pendo/components';
 import { ref, watch } from 'vue';
 import { mapActions, mapGetters, mapMutations, mapState } from 'vuex';
+import cloneDeep from 'lodash/cloneDeep';
 import { useStore } from '@/utils/vuex';
 import { sleep, resetIdleMs, idleMs } from '@/utils/time';
 import { DEFAULT_MAP_SIZE, indexToAlphabeticID, collatz } from '@/utils/generate';
@@ -126,6 +127,7 @@ export default {
     methods: {
         ...mapMutations({
             increment: 'increment',
+            setMap: 'setMap',
             setMapAtKey: 'setMapAtKey',
             setMapAtKeys: 'setMapAtKeys'
         }),
@@ -191,17 +193,16 @@ export default {
         async commitWithClone() {
             this.commitWithCloneLoading = true;
 
-            // TODO: cloneDeep
-            const changeMap = {};
+            const map = cloneDeep(this.map);
 
             for (const key of this.getKeys()) {
                 await sleep(this.includeTimeouts ? 10 : 0);
 
-                const value = this.mapAtKey(key).i;
-                changeMap[key] = collatz(value);
+                const value = map[key].i;
+                map[key].i = collatz(value);
             }
 
-            this.setMapAtKeys({ changeMap });
+            this.setMap(map);
 
             this.commitWithCloneLoading = false;
         }
