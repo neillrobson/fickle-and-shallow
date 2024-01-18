@@ -45,11 +45,38 @@
 - Deep, on `map`
 - Shallow, on `map.abc.i`
 
-## Looped Dispatch
+## Looped Dispatch/Commit
+
+### Experiment Setup
 
 - Fifty (?) iterations, one of which is `abc`
 - collatzAtKey action: rand await timeout
 - collatzAtKey mutation: directly change `i` value
+
+### Conclusions
+
+- External/internal is negligible
+- Commit is better than dispatch
+- Frontloaded API calls is better than interspersed
+  - Caveat: UI lockup is worse with frontloaded calls
+
+## Nested Mutations
+
+### Experiment Setup
+
+- Twenty iterations
+  - Ten fixed (_watch all of these_)
+  - Ten random
+  - Evenly distributed (rand/fixed/rand/fixed)
+- Standard 10ms sleep per iteration: 200ms overall
+- Variations:
+  - Looped `setMapAtKey` in an action (10ms sleep per)
+  - Pre-build `changeMap`, pass to `setMapAtKeys`
+  - Clone and update `map`, pass to `setMap`
+
+### Conclusions
+
+🚧 TODO 🚧
 
 ## Project setup
 
