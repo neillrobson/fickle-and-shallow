@@ -52,8 +52,8 @@ import { indexToAlphabeticID, collatz, makeFiller } from '@/utils/generate';
 
 const MAP_SIZE = 1000;
 const ABA_INDEX = 728;
-const NUM_KEYS = 80;
-const NUM_FIXED_KEYS = NUM_KEYS / 2;
+const NUM_KEYS = 500;
+const NUM_FIXED_KEYS = 10; // NUM_KEYS / 2;
 const TIMEOUT_MS_DURING = 10;
 const TIMEOUT_MS_BEFORE = TIMEOUT_MS_DURING * NUM_KEYS;
 
