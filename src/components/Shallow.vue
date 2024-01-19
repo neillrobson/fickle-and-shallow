@@ -39,11 +39,11 @@
 
 <script>
 import { PendoButton, PendoToggle } from '@pendo/components';
-import { ref, watch } from 'vue';
+import { watch } from 'vue';
 import { mapActions, mapGetters, mapMutations, mapState } from 'vuex';
 import cloneDeep from 'lodash/cloneDeep';
 import { useStore } from '@/utils/vuex';
-import { sleep, resetIdleMs, idleMs } from '@/utils/time';
+import { Timer } from '@/utils/time';
 import { DEFAULT_MAP_SIZE, indexToAlphabeticID, collatz } from '@/utils/generate';
 
 const ABA_INDEX = 728;
@@ -51,6 +51,8 @@ const NUM_KEYS = 80;
 const NUM_FIXED_KEYS = NUM_KEYS / 2;
 const TIMEOUT_MS_DURING = 10;
 const TIMEOUT_MS_BEFORE = TIMEOUT_MS_DURING * NUM_KEYS;
+
+const timer = new Timer();
 
 export default {
     name: 'App',
@@ -60,12 +62,6 @@ export default {
     },
     setup() {
         const store = useStore();
-
-        const multipleCommitsLoading = ref(false);
-        const commitWithLoopLoading = ref(false);
-        const commitWithCloneLoading = ref(false);
-        const lastRunTimeMs = ref(0);
-        const idleTimeMs = ref(0);
 
         watch(
             () => store.state.map,
@@ -92,36 +88,16 @@ export default {
                 }
             );
         }
-
-        let start = 0;
-        const loadingWatcher = (loading) => {
-            if (loading) {
-                start = performance.now();
-            } else {
-                const end = performance.now();
-                const grossTime = end - start;
-                idleTimeMs.value = Math.round(idleMs);
-                lastRunTimeMs.value = Math.round(grossTime - idleMs);
-                resetIdleMs();
-            }
-        };
-
-        watch(multipleCommitsLoading, loadingWatcher);
-        watch(commitWithLoopLoading, loadingWatcher);
-        watch(commitWithCloneLoading, loadingWatcher);
-
-        return {
-            multipleCommitsLoading,
-            commitWithLoopLoading,
-            commitWithCloneLoading,
-            lastRunTimeMs,
-            idleTimeMs
-        };
     },
     data() {
         return {
             includeTimeouts: true,
-            collapseTimeouts: false
+            collapseTimeouts: false,
+            lastRunTimeMs: 0,
+            idleTimeMs: 0,
+            multipleCommitsLoading: false,
+            commitWithLoopLoading: false,
+            commitWithCloneLoading: false
         };
     },
     computed: {
@@ -178,11 +154,13 @@ export default {
         },
         async multipleCommits() {
             this.multipleCommitsLoading = true;
+            await this.$nextTick();
+            timer.start();
 
-            await sleep(this.timeoutBefore ? TIMEOUT_MS_BEFORE : 0);
+            if (this.timeoutBefore) await timer.sleep(TIMEOUT_MS_BEFORE);
 
             for (const key of this.getKeys()) {
-                if (this.timeoutDuring) await sleep(TIMEOUT_MS_DURING);
+                if (this.timeoutDuring) await timer.sleep(TIMEOUT_MS_DURING);
 
                 const value = this.mapAtKey(key).i;
 
@@ -193,42 +171,51 @@ export default {
                 }
             }
 
+            timer.end();
+            this.lastRunTimeMs = timer.elapsedMs;
+            this.idleTimeMs = timer.idleMs;
             this.multipleCommitsLoading = false;
         },
         async commitWithLoop() {
             this.commitWithLoopLoading = true;
+            await this.$nextTick();
+            timer.start();
 
-            await sleep(this.timeoutBefore ? TIMEOUT_MS_BEFORE : 0);
+            if (this.timeoutBefore) await timer.sleep(TIMEOUT_MS_BEFORE);
 
             const changeMap = {};
-
             for (const key of this.getKeys()) {
-                if (this.timeoutDuring) await sleep(TIMEOUT_MS_DURING);
+                if (this.timeoutDuring) await timer.sleep(TIMEOUT_MS_DURING);
 
                 const value = this.mapAtKey(key).i;
                 changeMap[key] = collatz(value);
             }
-
             this.setMapAtKeys({ changeMap });
 
+            timer.end();
+            this.lastRunTimeMs = timer.elapsedMs;
+            this.idleTimeMs = timer.idleMs;
             this.commitWithLoopLoading = false;
         },
         async commitWithClone() {
             this.commitWithCloneLoading = true;
+            await this.$nextTick();
+            timer.start();
 
-            await sleep(this.timeoutBefore ? TIMEOUT_MS_BEFORE : 0);
+            if (this.timeoutBefore) await timer.sleep(TIMEOUT_MS_BEFORE);
 
             const map = cloneDeep(this.map);
-
             for (const key of this.getKeys()) {
-                if (this.timeoutDuring) await sleep(TIMEOUT_MS_DURING);
+                if (this.timeoutDuring) await timer.sleep(TIMEOUT_MS_DURING);
 
                 const value = map[key].i;
                 map[key].i = collatz(value);
             }
-
             this.setMap(map);
 
+            timer.end();
+            this.lastRunTimeMs = timer.elapsedMs;
+            this.idleTimeMs = timer.idleMs;
             this.commitWithCloneLoading = false;
         }
     }
