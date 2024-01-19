@@ -52,8 +52,6 @@ const NUM_FIXED_KEYS = NUM_KEYS / 2;
 const TIMEOUT_MS_DURING = 10;
 const TIMEOUT_MS_BEFORE = TIMEOUT_MS_DURING * NUM_KEYS;
 
-const timer = new Timer();
-
 export default {
     name: 'App',
     components: {
@@ -70,13 +68,14 @@ export default {
             }
         );
 
-        watch(
-            () => store.state.map,
-            () => {
-                console.log('Deep watcher');
-            },
-            { deep: true }
-        );
+        for (let i = 0; i < 10; i++)
+            watch(
+                () => store.state.map,
+                () => {
+                    console.log(`Deep watcher ${i}`);
+                },
+                { deep: true }
+            );
 
         // aba to abj
         for (let i = 0; i < NUM_FIXED_KEYS; i++) {
@@ -121,6 +120,11 @@ export default {
             return this.includeTimeouts && !this.collapseTimeouts;
         }
     },
+    created() {
+        const { $nextTick } = this;
+
+        this.timer = new Timer($nextTick.bind(this));
+    },
     methods: {
         ...mapMutations({
             increment: 'increment',
@@ -154,13 +158,12 @@ export default {
         },
         async multipleCommits() {
             this.multipleCommitsLoading = true;
-            await this.$nextTick();
-            timer.start();
+            await this.timer.start();
 
-            if (this.timeoutBefore) await timer.sleep(TIMEOUT_MS_BEFORE);
+            if (this.timeoutBefore) await this.timer.sleep(TIMEOUT_MS_BEFORE);
 
             for (const key of this.getKeys()) {
-                if (this.timeoutDuring) await timer.sleep(TIMEOUT_MS_DURING);
+                if (this.timeoutDuring) await this.timer.sleep(TIMEOUT_MS_DURING);
 
                 const value = this.mapAtKey(key).i;
 
@@ -171,51 +174,49 @@ export default {
                 }
             }
 
-            timer.end();
-            this.lastRunTimeMs = timer.elapsedMs;
-            this.idleTimeMs = timer.idleMs;
+            await this.timer.end();
+            this.lastRunTimeMs = this.timer.elapsedMs;
+            this.idleTimeMs = this.timer.idleMs;
             this.multipleCommitsLoading = false;
         },
         async commitWithLoop() {
             this.commitWithLoopLoading = true;
-            await this.$nextTick();
-            timer.start();
+            await this.timer.start();
 
-            if (this.timeoutBefore) await timer.sleep(TIMEOUT_MS_BEFORE);
+            if (this.timeoutBefore) await this.timer.sleep(TIMEOUT_MS_BEFORE);
 
             const changeMap = {};
             for (const key of this.getKeys()) {
-                if (this.timeoutDuring) await timer.sleep(TIMEOUT_MS_DURING);
+                if (this.timeoutDuring) await this.timer.sleep(TIMEOUT_MS_DURING);
 
                 const value = this.mapAtKey(key).i;
                 changeMap[key] = collatz(value);
             }
             this.setMapAtKeys({ changeMap });
 
-            timer.end();
-            this.lastRunTimeMs = timer.elapsedMs;
-            this.idleTimeMs = timer.idleMs;
+            await this.timer.end();
+            this.lastRunTimeMs = this.timer.elapsedMs;
+            this.idleTimeMs = this.timer.idleMs;
             this.commitWithLoopLoading = false;
         },
         async commitWithClone() {
             this.commitWithCloneLoading = true;
-            await this.$nextTick();
-            timer.start();
+            await this.timer.start();
 
-            if (this.timeoutBefore) await timer.sleep(TIMEOUT_MS_BEFORE);
+            if (this.timeoutBefore) await this.timer.sleep(TIMEOUT_MS_BEFORE);
 
             const map = cloneDeep(this.map);
             for (const key of this.getKeys()) {
-                if (this.timeoutDuring) await timer.sleep(TIMEOUT_MS_DURING);
+                if (this.timeoutDuring) await this.timer.sleep(TIMEOUT_MS_DURING);
 
                 const value = map[key].i;
                 map[key].i = collatz(value);
             }
             this.setMap(map);
 
-            timer.end();
-            this.lastRunTimeMs = timer.elapsedMs;
-            this.idleTimeMs = timer.idleMs;
+            await this.timer.end();
+            this.lastRunTimeMs = this.timer.elapsedMs;
+            this.idleTimeMs = this.timer.idleMs;
             this.commitWithCloneLoading = false;
         }
     }

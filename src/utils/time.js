@@ -12,6 +12,11 @@ export class Timer {
     #startMs;
     #elapsedMs;
     #idleMs;
+    #nextTick;
+
+    constructor(nextTick) {
+        this.#nextTick = nextTick;
+    }
 
     get idleMs() {
         return Math.round(this.#idleMs);
@@ -26,18 +31,20 @@ export class Timer {
         this.#idleMs = 0;
     }
 
-    start() {
+    async start() {
+        await this.#nextTick();
         this.reset();
         this.#startMs = performance.now();
     }
 
-    end() {
+    async end() {
+        await this.#nextTick();
         const grossMs = performance.now() - this.#startMs;
         this.#elapsedMs = grossMs - this.#idleMs;
     }
 
-    sleep(ms) {
-        return new Promise((resolve) => {
+    async sleep(ms) {
+        await new Promise((resolve) => {
             this.#idleMs += ms;
             setTimeout(resolve, ms);
         });
