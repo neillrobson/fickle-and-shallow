@@ -1,4 +1,4 @@
-import { alphabetMap } from '@/utils/generate';
+import { DEFAULT_MAP_SIZE, alphabetMap } from '@/utils/generate';
 import { sleep } from '@/utils/time';
 import Vue from 'vue';
 import Vuex, { Store } from 'vuex';
@@ -27,8 +27,8 @@ export default new Store({
         }
     },
     actions: {
-        hydrate({ commit }) {
-            commit('setMap', alphabetMap());
+        hydrate({ commit }, { count = DEFAULT_MAP_SIZE, filler } = {}) {
+            commit('setMap', alphabetMap(count, filler));
         },
         async collatzAtKey({ commit, getters }, { key, includeTimeouts }) {
             const value = getters.mapAtKey(key).i;

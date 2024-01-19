@@ -6,7 +6,7 @@
         <pendo-button
             label="Hydrate Vuex"
             :prefix-icon="vuexHydrated ? undefined : 'alert-circle'"
-            @click="hydrate" />
+            @click="onHydrate" />
         <hr />
         <pendo-toggle
             label="Include Timeouts"
@@ -31,6 +31,10 @@
             label="Commit with Clone"
             :loading="commitWithCloneLoading"
             @click="commitWithClone" />
+        <pendo-button
+            label="Commit with Shallow Clone"
+            :loading="shallowCloneLoading"
+            @click="commitWithShallowClone" />
         <hr />
         <p>Time spent on last run: {{ lastRunTimeMs }}ms</p>
         <p>Idle time: {{ idleTimeMs }}ms</p>
@@ -44,8 +48,9 @@ import { mapActions, mapGetters, mapMutations, mapState } from 'vuex';
 import cloneDeep from 'lodash/cloneDeep';
 import { useStore } from '@/utils/vuex';
 import { Timer } from '@/utils/time';
-import { DEFAULT_MAP_SIZE, indexToAlphabeticID, collatz } from '@/utils/generate';
+import { indexToAlphabeticID, collatz, makeFiller } from '@/utils/generate';
 
+const MAP_SIZE = 1000;
 const ABA_INDEX = 728;
 const NUM_KEYS = 80;
 const NUM_FIXED_KEYS = NUM_KEYS / 2;
@@ -96,7 +101,8 @@ export default {
             idleTimeMs: 0,
             multipleCommitsLoading: false,
             commitWithLoopLoading: false,
-            commitWithCloneLoading: false
+            commitWithCloneLoading: false,
+            shallowCloneLoading: false
         };
     },
     computed: {
@@ -141,6 +147,9 @@ export default {
         onClick() {
             this.increment();
         },
+        onHydrate() {
+            this.hydrate({ count: MAP_SIZE, filler: makeFiller(100) });
+        },
         getKeys() {
             const keys = [];
 
@@ -148,8 +157,8 @@ export default {
                 if (i % 2 === 0) {
                     keys.push(indexToAlphabeticID(i / 2 + ABA_INDEX));
                 } else {
-                    let index = Math.floor(Math.random() * (DEFAULT_MAP_SIZE - NUM_FIXED_KEYS));
-                    index = (index + ABA_INDEX + NUM_FIXED_KEYS) % DEFAULT_MAP_SIZE;
+                    let index = Math.floor(Math.random() * (MAP_SIZE - NUM_FIXED_KEYS));
+                    index = (index + ABA_INDEX + NUM_FIXED_KEYS) % MAP_SIZE;
                     keys.push(indexToAlphabeticID(index));
                 }
             }
@@ -218,6 +227,29 @@ export default {
             this.lastRunTimeMs = this.timer.elapsedMs;
             this.idleTimeMs = this.timer.idleMs;
             this.commitWithCloneLoading = false;
+        },
+        async commitWithShallowClone() {
+            this.shallowCloneLoading = true;
+            await this.timer.start();
+
+            if (this.timeoutBefore) await this.timer.sleep(TIMEOUT_MS_BEFORE);
+
+            const map = { ...this.map };
+            for (const key of this.getKeys()) {
+                if (this.timeoutDuring) await this.timer.sleep(TIMEOUT_MS_DURING);
+
+                const value = map[key].i;
+                map[key] = {
+                    ...map[key],
+                    i: collatz(value)
+                };
+            }
+            this.setMap(map);
+
+            await this.timer.end();
+            this.lastRunTimeMs = this.timer.elapsedMs;
+            this.idleTimeMs = this.timer.idleMs;
+            this.shallowCloneLoading = false;
         }
     }
 };

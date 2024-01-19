@@ -86,3 +86,10 @@ export function alphabetMap(count = DEFAULT_MAP_SIZE, filler = (i) => ({ i })) {
 }
 
 export const collatz = (i) => (i % 2 === 0 ? i / 2 : i * 3 + 1);
+
+export const makeFiller = (keyCount) => (i) =>
+    Object.fromEntries(
+        Array(keyCount)
+            .fill()
+            .map((_, j) => [indexToAlphabeticID(j), i + j])
+    );
