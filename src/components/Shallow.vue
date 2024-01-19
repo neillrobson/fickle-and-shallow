@@ -5,12 +5,19 @@
             @click="onClick" />
         <pendo-button
             label="Hydrate Vuex"
+            :prefix-icon="vuexHydrated ? undefined : 'alert-circle'"
             @click="hydrate" />
+        <hr />
         <pendo-toggle
             label="Include Timeouts"
             label-position="left"
             :value="includeTimeouts"
             @change="includeTimeouts = $event" />
+        <pendo-toggle
+            label="Collapse Timeouts"
+            label-position="left"
+            :value="collapseTimeouts"
+            @change="collapseTimeouts = $event" />
         <hr />
         <pendo-button
             label="Multiple Commits"
@@ -40,6 +47,10 @@ import { sleep, resetIdleMs, idleMs } from '@/utils/time';
 import { DEFAULT_MAP_SIZE, indexToAlphabeticID, collatz } from '@/utils/generate';
 
 const ABA_INDEX = 728;
+const NUM_KEYS = 80;
+const NUM_FIXED_KEYS = NUM_KEYS / 2;
+const TIMEOUT_MS_DURING = 10;
+const TIMEOUT_MS_BEFORE = TIMEOUT_MS_DURING * NUM_KEYS;
 
 export default {
     name: 'App',
@@ -72,7 +83,7 @@ export default {
         );
 
         // aba to abj
-        for (let i = 0; i < 10; i++) {
+        for (let i = 0; i < NUM_FIXED_KEYS; i++) {
             const key = indexToAlphabeticID(i + ABA_INDEX);
             watch(
                 () => store.state.map[key]?.i,
@@ -109,7 +120,8 @@ export default {
     },
     data() {
         return {
-            includeTimeouts: true
+            includeTimeouts: true,
+            collapseTimeouts: false
         };
     },
     computed: {
@@ -122,6 +134,15 @@ export default {
         }),
         label() {
             return `Count: ${this.count}`;
+        },
+        vuexHydrated() {
+            return Object.keys(this.map).length > 0;
+        },
+        timeoutBefore() {
+            return this.includeTimeouts && this.collapseTimeouts;
+        },
+        timeoutDuring() {
+            return this.includeTimeouts && !this.collapseTimeouts;
         }
     },
     methods: {
@@ -143,12 +164,12 @@ export default {
         getKeys() {
             const keys = [];
 
-            for (let i = 0; i < 20; i++) {
+            for (let i = 0; i < NUM_KEYS; i++) {
                 if (i % 2 === 0) {
                     keys.push(indexToAlphabeticID(i / 2 + ABA_INDEX));
                 } else {
-                    let index = Math.floor(Math.random() * (DEFAULT_MAP_SIZE - 10));
-                    index = (index + ABA_INDEX + 10) % DEFAULT_MAP_SIZE;
+                    let index = Math.floor(Math.random() * (DEFAULT_MAP_SIZE - NUM_FIXED_KEYS));
+                    index = (index + ABA_INDEX + NUM_FIXED_KEYS) % DEFAULT_MAP_SIZE;
                     keys.push(indexToAlphabeticID(index));
                 }
             }
@@ -158,12 +179,12 @@ export default {
         async multipleCommits() {
             this.multipleCommitsLoading = true;
 
-            await sleep(0); // Force a tick for timing purposes
+            await sleep(this.timeoutBefore ? TIMEOUT_MS_BEFORE : 0);
 
             for (const key of this.getKeys()) {
-                const value = this.mapAtKey(key).i;
+                if (this.timeoutDuring) await sleep(TIMEOUT_MS_DURING);
 
-                if (this.includeTimeouts) await sleep(10);
+                const value = this.mapAtKey(key).i;
 
                 if (value % 2 === 0) {
                     this.setMapAtKey({ key, value: value / 2 });
@@ -177,10 +198,12 @@ export default {
         async commitWithLoop() {
             this.commitWithLoopLoading = true;
 
+            await sleep(this.timeoutBefore ? TIMEOUT_MS_BEFORE : 0);
+
             const changeMap = {};
 
             for (const key of this.getKeys()) {
-                await sleep(this.includeTimeouts ? 10 : 0);
+                if (this.timeoutDuring) await sleep(TIMEOUT_MS_DURING);
 
                 const value = this.mapAtKey(key).i;
                 changeMap[key] = collatz(value);
@@ -193,10 +216,12 @@ export default {
         async commitWithClone() {
             this.commitWithCloneLoading = true;
 
+            await sleep(this.timeoutBefore ? TIMEOUT_MS_BEFORE : 0);
+
             const map = cloneDeep(this.map);
 
             for (const key of this.getKeys()) {
-                await sleep(this.includeTimeouts ? 10 : 0);
+                if (this.timeoutDuring) await sleep(TIMEOUT_MS_DURING);
 
                 const value = map[key].i;
                 map[key].i = collatz(value);
