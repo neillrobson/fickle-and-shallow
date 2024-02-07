@@ -5,6 +5,9 @@
             class="tabs"
             vertical
             :tabs="tabs">
+            <template #empty>
+                <empty />
+            </template>
             <template #fickle>
                 <fickle />
             </template>
@@ -17,20 +20,27 @@
 
 <script>
 import { PendoTabs } from '@pendo/components';
+import Empty from '@/components/Empty.vue';
 import Fickle from '@/components/Fickle.vue';
 import Shallow from '@/components/Shallow.vue';
 
 export default {
     name: 'App',
     components: {
+        Empty,
         Fickle,
         Shallow,
         PendoTabs
     },
     data() {
         return {
-            activeTab: 'shallow',
+            activeTab: 'empty',
             tabs: [
+                {
+                    prop: 'empty',
+                    label: 'Empty',
+                    lazy: true
+                },
                 {
                     prop: 'fickle',
                     label: 'Fickle',
